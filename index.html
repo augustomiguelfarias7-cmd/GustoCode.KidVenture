@@ -1,97 +1,80 @@
 <!doctype html>
 <!--
   GustoCode - Editor Online (single-file)
-  Versão: single-file pronta para GitHub Pages
-  - Monaco Editor (UI)
-  - Python via Pyodide (WASM)
-  - JavaScript sandbox via QuickJS (WASM) / fallback iframe
-  - C/C++ tentativa via webc86 (fallback informativo)
-  - Assistente de Código client-side via transformers.js (sem API key)
-  Atenção: modelos de código podem ser grandes — use modelos pequenos para testes.
-  Autor: GustoCode (gerado para Augusto) 🚀
+  Versão: UI ampliada e click-friendly (melhorias solicitadas por Augusto)
 -->
 <html lang="pt-BR">
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>GustoCode — Editor Online</title>
-
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&display=swap" rel="stylesheet">
-
   <style>
-    /* ===========================
-       GustoCode - Estilo Futurista
-       =========================== */
     :root{
-      --bg:#080812; --panel:#0f1220; --muted:#9aa4b2;
-      --accent1:#6fe7d3; --accent2:#7a6eff; --glass: rgba(255,255,255,0.03);
-      --border: rgba(255,255,255,0.06); --success: #6fe7a1; --danger: #ff6b6b;
+      --bg:#07070b; --muted:#9aa4b2; --accent1:#6fe7d3; --accent2:#7a6eff;
+      --border: rgba(255,255,255,0.06); --glass: rgba(255,255,255,0.03);
+      --success:#6fe7a1; --danger:#ff6b6b;
     }
-    html,body{ height:100%; margin:0; background:
-      radial-gradient(1200px 600px at 10% 20%, rgba(122,110,255,0.08), transparent 8%),
-      radial-gradient(800px 400px at 90% 80%, rgba(111,231,211,0.05), transparent 8%),
+
+    html,body{ height:100%; margin:0; font-family:"Inter",system-ui,-apple-system,"Segoe UI",Roboto,Arial; background:
+      radial-gradient(1200px 600px at 10% 20%, rgba(122,110,255,0.06), transparent 8%),
+      radial-gradient(800px 400px at 90% 80%, rgba(111,231,211,0.03), transparent 8%),
       linear-gradient(180deg, #05050b 0%, var(--bg) 100%);
-      color:#dfe7ef; font-family:"Inter", system-ui, -apple-system, "Segoe UI", Roboto, Arial;
-      -webkit-font-smoothing:antialiased; -moz-osx-font-smoothing:grayscale;
+      color:#e7eef6; -webkit-font-smoothing:antialiased; -moz-osx-font-smoothing:grayscale;
     }
 
-    header{
-      height:64px; display:flex; align-items:center; gap:16px; padding:0 20px;
-      border-bottom:1px solid var(--border); backdrop-filter: blur(6px);
-      background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.00));
-    }
-    .logo{ display:flex; gap:12px; align-items:center; font-weight:800; }
-    .logo .icon{ width:40px; height:40px; border-radius:10px; display:grid; place-items:center;
-      background: linear-gradient(135deg,var(--accent2),var(--accent1)); box-shadow:0 6px 20px rgba(122,110,255,0.12);
-      transform: rotate(-10deg); font-weight:900;
-    }
-    .logo .name{ font-size:18px; } .logo .tag{ font-size:11px; color:var(--muted); }
+    /* Header */
+    header{ height:74px; display:flex; align-items:center; gap:18px; padding:0 22px; border-bottom:1px solid var(--border); z-index:50; position:relative; }
+    .logo{ display:flex; gap:14px; align-items:center; }
+    .logo .icon{ width:48px; height:48px; border-radius:12px; display:grid; place-items:center; background: linear-gradient(135deg,var(--accent2),var(--accent1)); box-shadow:0 10px 30px rgba(122,110,255,0.12); font-weight:900; transform:rotate(-10deg); }
+    .logo .name{ font-size:20px; font-weight:800; }
+    .logo .tag{ font-size:12px; color:var(--muted); font-weight:700; }
 
-    main.app{
-      display:grid; grid-template-columns: 320px 1fr 460px; grid-template-rows: calc(100vh - 64px);
-      gap:18px; padding:18px; box-sizing:border-box;
-    }
+    /* Layout */
+    main.app{ display:grid; grid-template-columns: 360px 1fr 520px; grid-template-rows: calc(100vh - 74px); gap:20px; padding:20px; box-sizing:border-box; }
 
-    /* Left sidebar */
-    .sidebar{ border-radius:12px; padding:12px; display:flex; flex-direction:column; gap:12px;
-      background: linear-gradient(180deg, rgba(255,255,255,0.01), rgba(255,255,255,0.00));
-      border:1px solid var(--border); box-shadow:0 10px 30px rgba(2,6,23,0.6); overflow:auto;
-    }
-    .file-list{ display:flex; flex-direction:column; gap:8px; margin-top:8px; }
-    .file-item{ padding:10px; border-radius:10px; display:flex; justify-content:space-between; align-items:center;
-      cursor:pointer; background: linear-gradient(90deg, rgba(255,255,255,0.01), rgba(255,255,255,0.00)); border:1px solid transparent;}
-    .file-item:hover{ transform:translateX(6px); box-shadow:0 6px 18px rgba(0,0,0,0.6); }
-    .file-item.active{ background: linear-gradient(90deg, rgba(122,110,255,0.09), rgba(111,231,211,0.03)); border-color: rgba(122,110,255,0.12); }
+    /* Sidebar left */
+    .sidebar{ border-radius:14px; padding:14px; display:flex; flex-direction:column; gap:14px; background:linear-gradient(180deg, rgba(255,255,255,0.01), rgba(255,255,255,0.00)); border:1px solid var(--border); box-shadow: 0 12px 40px rgba(2,6,23,0.6); overflow:auto; z-index:40; }
+    .file-list{ display:flex; flex-direction:column; gap:10px; margin-top:6px; }
+    .file-item{ padding:14px 12px; border-radius:12px; display:flex; justify-content:space-between; align-items:center; cursor:pointer; font-size:15px; background:rgba(255,255,255,0.01); transition:all .12s ease; pointer-events:auto; touch-action:manipulation; }
+    .file-item:hover{ transform:translateX(6px); box-shadow:0 12px 30px rgba(0,0,0,0.55); }
+    .file-item.active{ background: linear-gradient(90deg, rgba(122,110,255,0.085), rgba(111,231,211,0.03)); border:1px solid rgba(122,110,255,0.12); }
 
-    .btn{ display:inline-flex; gap:8px; align-items:center; padding:8px 10px; border-radius:8px;
-      background:linear-gradient(90deg,var(--accent2),var(--accent1)); color:#04121a; font-weight:700; border:none; cursor:pointer;
-      box-shadow: 0 6px 20px rgba(122,110,255,0.12);
-    }
+    /* Big buttons */
+    .btn{ display:inline-flex; gap:10px; align-items:center; padding:12px 14px; border-radius:12px; background:linear-gradient(90deg,var(--accent2),var(--accent1)); color:#04121a; font-weight:800; font-size:15px; border:none; cursor:pointer; box-shadow: 0 10px 30px rgba(122,110,255,0.12); pointer-events:auto; touch-action:manipulation; }
+    .btn:active{ transform:translateY(1px); }
 
-    /* center */
-    .editor-panel{ border-radius:12px; overflow:hidden; display:flex; flex-direction:column; border:1px solid var(--border); }
-    .tabs{ display:flex; align-items:center; gap:8px; padding:10px; border-bottom:1px solid var(--border); }
-    .tab{ padding:8px 12px; border-radius:8px; font-weight:600; font-size:13px; cursor:pointer; color:var(--muted); }
+    /* Center Editor */
+    .editor-panel{ border-radius:14px; overflow:hidden; display:flex; flex-direction:column; border:1px solid var(--border); box-shadow:0 12px 40px rgba(2,6,23,0.6); background: linear-gradient(180deg, rgba(255,255,255,0.01), rgba(255,255,255,0.00)); z-index:30; }
+    .tabs{ display:flex; align-items:center; gap:10px; padding:12px; border-bottom:1px solid var(--border); }
+    .tab{ padding:10px 14px; border-radius:10px; font-weight:700; font-size:15px; cursor:pointer; color:var(--muted); border:1px solid transparent; background:transparent; pointer-events:auto; touch-action:manipulation; }
     .tab.active{ color:#e9f8f3; background: linear-gradient(90deg, rgba(122,110,255,0.08), rgba(111,231,211,0.03)); border-color: rgba(122,110,255,0.08); }
 
-    .toolbar{ display:flex; align-items:center; gap:12px; padding:10px; }
-    .toolbar .select, .toolbar .input{ background:rgba(255,255,255,0.02); border:1px solid var(--border); padding:8px 10px; border-radius:8px; color:var(--muted); font-weight:600; }
-    #editor{ height: calc(100vh - 220px); }
+    .toolbar{ display:flex; align-items:center; gap:12px; padding:12px; }
+    .toolbar .select, .toolbar .input{ background:rgba(255,255,255,0.02); border:1px solid var(--border); padding:12px 14px; border-radius:10px; color:var(--muted); font-weight:700; font-size:14px; pointer-events:auto; touch-action:manipulation; }
+    #editor{ height: calc(100vh - 260px); min-height:420px; } /* maior área do editor */
 
-    /* right */
-    .right-panel{ border-radius:12px; border:1px solid var(--border); padding:12px; display:flex; flex-direction:column; gap:12px; overflow:auto; }
-    .terminal{ background: linear-gradient(180deg, rgba(0,0,0,0.25), rgba(0,0,0,0.12)); border-radius:10px; height:300px; padding:12px; font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, "Roboto Mono", monospace; font-size:13px; color:#a9ffe1; overflow:auto; border:1px solid rgba(255,255,255,0.03); }
-    .statusbar{ height:46px; border-top:1px solid var(--border); display:flex; align-items:center; justify-content:space-between; padding:0 12px; font-size:13px; color:var(--muted); }
+    /* Right panel */
+    .right-panel{ border-radius:14px; border:1px solid var(--border); padding:14px; display:flex; flex-direction:column; gap:14px; overflow:auto; background:linear-gradient(180deg, rgba(255,255,255,0.01), rgba(255,255,255,0.00)); z-index:40; }
+    .terminal{ background: linear-gradient(180deg, rgba(0,0,0,0.25), rgba(0,0,0,0.12)); border-radius:12px; height:360px; padding:14px; font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, "Roboto Mono", monospace; font-size:14px; color:#a9ffe1; overflow:auto; border:1px solid rgba(255,255,255,0.03); }
+    .fancy-panel{ padding:12px; border-radius:12px; background: linear-gradient(180deg, rgba(255,255,255,0.01), rgba(255,255,255,0.00)); border:1px solid rgba(255,255,255,0.03); }
 
-    @media (max-width:1100px){ main.app{ grid-template-columns:1fr; grid-template-rows:auto 1fr auto; } #editor{ height:60vh; } }
+    .statusbar{ height:56px; border-top:1px solid var(--border); display:flex; align-items:center; justify-content:space-between; padding:0 16px; font-size:14px; color:var(--muted); }
 
-    /* extras para "fazer bonito" */
-    .muted{ color:var(--muted); font-size:12px; } .small{ font-size:12px; color:var(--muted); }
-    .chip{ padding:6px 10px; border-radius:999px; background: rgba(255,255,255,0.02); border:1px solid rgba(255,255,255,0.03); font-weight:700; font-size:12px; color:var(--muted); }
-    .kbd{ background:rgba(255,255,255,0.03); padding:6px 8px; border-radius:6px; font-weight:700; font-size:12px; color:var(--muted); border:1px solid rgba(255,255,255,0.02); }
+    /* responsive */
+    @media (max-width:1100px){
+      main.app{ grid-template-columns:1fr; grid-template-rows:auto 1fr auto; padding:12px; gap:12px; }
+      #editor{ height:60vh; min-height:300px; }
+      .right-panel{ height:340px; }
+    }
 
-    /* muitas linhas vazias e regras extras (intencional para atender pedido de arquivo "longuinho") */
-    .___pad{ height:6px; } .___pad2{ height:6px; } .___pad3{ height:6px; }
+    /* touch-friendly extras */
+    button, select, input, textarea { -webkit-tap-highlight-color: rgba(255,255,255,0.06); -webkit-user-select:none; user-select:none; }
+    .muted{ color:var(--muted); font-size:13px; } .small{ font-size:13px; color:var(--muted); }
+    .chip{ padding:8px 12px; border-radius:999px; background: rgba(255,255,255,0.02); border:1px solid rgba(255,255,255,0.03); font-weight:800; font-size:13px; color:var(--muted); }
+
+    /* ensure clickable UI sits above editor */
+    header, .sidebar, .editor-panel, .right-panel { position:relative; }
   </style>
 </head>
 <body>
@@ -106,7 +89,7 @@
 
     <div style="flex:1"></div>
 
-    <div style="display:flex;gap:10px;align-items:center">
+    <div style="display:flex;gap:12px;align-items:center">
       <div class="small muted">Conectado: <span id="statusEngine">—</span></div>
       <div class="chip" id="userInfo">Olá, Augusto 👋</div>
       <button class="btn" id="shareBtn" title="Exportar / Compartilhar">Exportar 💾</button>
@@ -116,21 +99,20 @@
   <main class="app" role="main">
     <!-- LEFT -->
     <aside class="sidebar" aria-label="Explorador e configurações">
-      <h3>Arquivos <span class="small muted">• Projeto</span></h3>
-
+      <h3 style="margin:0">Arquivos <span class="small muted">• Projeto</span></h3>
       <div class="file-list" id="fileList"></div>
 
-      <div style="display:flex;gap:8px;margin-top:auto;align-items:center;">
+      <div style="display:flex;gap:10px;margin-top:auto;align-items:center;">
         <button class="btn" id="newFile">Novo Arquivo +</button>
-        <button class="btn" id="themeToggle" style="background:transparent;border:1px solid var(--border);color:var(--muted);font-weight:700">Tema</button>
+        <button class="btn" id="themeToggle" style="background:transparent;border:1px solid var(--border);color:var(--muted);font-weight:800">Tema</button>
       </div>
 
       <div class="fancy-panel" style="margin-top:8px">
         <h3 style="margin:0">Ambiente</h3>
         <div class="small muted" style="margin-top:8px">Executores carregados:</div>
-        <ul style="margin:8px 0 0 14px;padding:0" id="runtimesList">
-          <li>Python (Pyodide) — <span id="pyStatus" class="small muted">carregando...</span></li>
-          <li>JavaScript (QuickJS) — <span id="jsStatus" class="small muted">carregando...</span></li>
+        <ul style="margin:8px 0 0 18px;padding:0" id="runtimesList">
+          <li style="margin-bottom:6px">Python (Pyodide) — <span id="pyStatus" class="small muted">carregando...</span></li>
+          <li style="margin-bottom:6px">JavaScript (QuickJS) — <span id="jsStatus" class="small muted">carregando...</span></li>
           <li>C/C++ (webc86) — <span id="cStatus" class="small muted">verificando...</span></li>
         </ul>
       </div>
@@ -139,7 +121,7 @@
         <h3 style="margin:0">Atalhos</h3>
         <div class="small" style="margin-top:8px">
           <div style="display:flex;justify-content:space-between"><span>Executar</span> <span class="kbd">Ctrl + Enter</span></div>
-          <div style="display:flex;justify-content:space-between;margin-top:6px"><span>Sugestões</span> <span class="kbd">Ctrl + Espaço</span></div>
+          <div style="display:flex;justify-content:space-between;margin-top:8px"><span>Sugestões</span> <span class="kbd">Ctrl + Espaço</span></div>
         </div>
       </div>
     </aside>
@@ -151,8 +133,8 @@
         <div class="tab" data-fid="main.js">main.js</div>
         <div class="tab" data-fid="main.c">main.c</div>
         <div style="flex:1"></div>
-        <div style="display:flex;gap:8px;align-items:center">
-          <select id="languageSelect" class="select" title="Linguagem">
+        <div style="display:flex;gap:10px;align-items:center">
+          <select id="languageSelect" class="select" title="Linguagem" aria-label="Linguagem">
             <option value="python">Python</option>
             <option value="javascript">JavaScript</option>
             <option value="c">C</option>
@@ -165,7 +147,7 @@
       </div>
 
       <div class="toolbar">
-        <input id="searchInFile" class="input" placeholder="Procurar no arquivo... (Ctrl+F)">
+        <input id="searchInFile" class="input" placeholder="Procurar no arquivo... (Ctrl+F)" aria-label="Pesquisar no arquivo" />
         <div style="flex:1"></div>
         <div class="small muted">Kernel:</div>
         <div class="chip" id="kernelName">client-wasm</div>
@@ -174,7 +156,7 @@
       <div id="editor" aria-label="Área do editor"></div>
 
       <div class="statusbar">
-        <div>GustoCode — editor 100% client-side • WebAssembly</div>
+        <div style="font-weight:700">GustoCode — editor 100% client-side • WebAssembly</div>
         <div class="small muted">Pronto • <span id="cursorInfo">Ln 1, Col 1</span></div>
       </div>
     </section>
@@ -184,7 +166,7 @@
       <div>
         <div style="display:flex;justify-content:space-between;align-items:center">
           <h3 style="margin:0">Terminal</h3>
-          <div class="small muted">Saída do programa • Gosto de ver logs ✨</div>
+          <div class="small muted">Saída do programa • Logs</div>
         </div>
         <div id="terminal" class="terminal" role="log">Bem-vindo ao GustoCode — Augusto! 🛸
 Carregando runtimes, aguarde...</div>
@@ -192,7 +174,7 @@ Carregando runtimes, aguarde...</div>
 
       <div class="fancy-panel">
         <h3 style="margin:0">Snippets</h3>
-        <div style="display:flex;flex-direction:column;gap:8px;margin-top:8px">
+        <div style="display:flex;flex-direction:column;gap:10px;margin-top:12px">
           <button class="btn" onclick="insertSnippet('py')">Boilerplate Python 🐍</button>
           <button class="btn" onclick="insertSnippet('js')">Boilerplate JS ✨</button>
           <button class="btn" onclick="insertSnippet('c')">Boilerplate C ⚙️</button>
@@ -200,24 +182,24 @@ Carregando runtimes, aguarde...</div>
       </div>
 
       <!-- Assistente de Código -->
-      <div class="fancy-panel" id="assistantPanel" style="display:block">
+      <div class="fancy-panel" id="assistantPanel">
         <h3 style="margin:0">Assistente de Código</h3>
-        <div style="margin-top:8px; display:flex; gap:8px; flex-direction:column;">
-          <textarea id="assistantPrompt" placeholder="Descreva o que quer (ex: 'Implementar função de ordenação otimizada')" style="width:100%;min-height:84px;padding:8px;border-radius:8px;background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.03);color:inherit;"></textarea>
+        <div style="margin-top:10px; display:flex; gap:10px; flex-direction:column;">
+          <textarea id="assistantPrompt" placeholder="Descreva o que quer (ex: 'Implementar função de ordenação otimizada')" style="width:100%;min-height:96px;padding:12px;border-radius:10px;background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.03);color:inherit;font-size:14px;"></textarea>
 
-          <div style="display:flex;gap:8px;">
+          <div style="display:flex;gap:10px;align-items:center">
             <button class="btn" id="askAssistantBtn">Pedir sugestão 💡</button>
-            <select id="assistantModelSelect" class="select" style="min-width:180px;">
-              <!-- Modelo demo; você pode substituir por um modelo menor / local -->
-              <option value="xenova/starcoder-small">StarCoder (pequeno demo)</option>
+            <select id="assistantModelSelect" class="select" style="min-width:220px;padding:12px;border-radius:10px;">
+              <option value="xenova/starcoder-small">StarCoder (demo pequeno)</option>
               <option value="xenova/starcoder">StarCoder (padrão — pesado)</option>
               <option value="local">Modelo local / URL</option>
             </select>
           </div>
 
-          <div class="small muted" style="margin-top:6px">Resultado:</div>
-          <pre id="assistantOutput" style="background:rgba(0,0,0,0.25);padding:8px;border-radius:8px;min-height:120px;overflow:auto;"></pre>
-          <div style="display:flex;gap:8px;justify-content:flex-end;">
+          <div class="small muted">Resultado:</div>
+          <pre id="assistantOutput" style="background:rgba(0,0,0,0.22);padding:12px;border-radius:10px;min-height:140px;overflow:auto;font-size:13px"></pre>
+
+          <div style="display:flex;gap:10px;justify-content:flex-end">
             <button class="btn" id="insertSuggestionBtn">Inserir no editor ➕</button>
             <button class="btn" id="copySuggestionBtn">Copiar ✂️</button>
           </div>
@@ -226,125 +208,314 @@ Carregando runtimes, aguarde...</div>
 
       <div>
         <h3 style="margin:0">Info</h3>
-        <div class="small muted" style="margin-top:8px">Single-file, client-side. Para modelos grandes, hospede os arquivos do modelo no repo ou use versão quantizada.</div>
+        <div class="small muted" style="margin-top:8px">Single-file, client-side. Para modelos grandes, hospede os arquivos no repo ou use versão quantizada.</div>
       </div>
     </aside>
   </main>
 
-  <!-- SCRIPTS: Monaco loader -->
+  <!-- SCRIPTS: carregar depois do DOM -->
   <script src="https://cdn.jsdelivr.net/npm/monaco-editor@0.39.0/min/vs/loader.js"></script>
 
   <script>
-  /*************************************************************************
-   * GustoCode - Single-file bootstrap
-   *************************************************************************/
-  const G = {
-    files: {
-      "main.py": "# Código Python de exemplo\nprint('Olá, Augusto!')\n",
-      "main.js": "// Código JavaScript de exemplo\nconsole.log('Olá, Augusto!')\n",
-      "main.c": "/* Código C de exemplo */\n#include <stdio.h>\nint main(){ printf(\"Olá, Augusto!\\n\"); return 0; }\n"
-    },
-    activeFile: "main.py",
-    monaco: null,
-    editor: null,
-    pyodide: null,
-    quickjs: null,
-    webc86: null,
-    runtimesReady: { py:false, js:false, c:false }
-  };
+  document.addEventListener('DOMContentLoaded', function(){
+    /***********************
+     * GustoCode - bootstrap
+     ***********************/
+    const G = window.G = {
+      files: {
+        "main.py": "# Código Python de exemplo\nprint('Olá, Augusto!')\n",
+        "main.js": "// Código JavaScript de exemplo\nconsole.log('Olá, Augusto!')\n",
+        "main.c": "/* Código C de exemplo */\n#include <stdio.h>\nint main(){ printf(\"Olá, Augusto!\\n\"); return 0; }\n"
+      },
+      activeFile: "main.py",
+      monaco: null,
+      editor: null,
+      pyodide: null,
+      quickjs: null,
+      webc86: null,
+      runtimesReady: { py:false, js:false, c:false }
+    };
 
-  function logTerminal(text, kind='info') {
-    const t = document.getElementById('terminal');
-    const time = new Date().toLocaleTimeString();
-    const prefix = kind==='err' ? '[ERR]' : '[OUT]';
-    t.innerHTML += `[${time}] ${prefix} ${escapeHtml(String(text))}\n`;
-    t.scrollTop = t.scrollHeight;
-  }
-  function escapeHtml(s){ return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
-
-  function refreshFileUI() {
-    const fl = document.getElementById('fileList');
-    fl.innerHTML = '';
-    for (const fname of Object.keys(G.files)) {
-      const item = document.createElement('div');
-      item.className = 'file-item' + (fname===G.activeFile ? ' active' : '');
-      item.innerHTML = `<div>${fname}</div><div class="muted small">✎</div>`;
-      item.onclick = () => { openFile(fname); };
-      fl.appendChild(item);
+    // UI helpers
+    function logTerminal(text, kind='info'){
+      const t = document.getElementById('terminal');
+      const time = new Date().toLocaleTimeString();
+      const prefix = kind==='err' ? '<span style="color:#ff9b6b">ERR</span>' : '<span style="color:#7ef2b6">OUT</span>';
+      t.innerHTML += `[${time}] ${prefix} ${escapeHtml(String(text))}\n`;
+      t.scrollTop = t.scrollHeight;
     }
-    const tabs = document.getElementById('tabs');
-    const tabEls = tabs.querySelectorAll('.tab');
-    tabEls.forEach(t => t.classList.remove('active'));
-    const myTab = Array.from(tabEls).find(x => x.dataset.fid === G.activeFile);
-    if(myTab) myTab.classList.add('active');
-  }
+    function escapeHtml(s){ return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
 
-  function openFile(name){
-    if(!G.files[name]) return;
-    G.activeFile = name;
-    if(G.editor) G.editor.setValue(G.files[name]);
-    refreshFileUI();
-    updateLanguageSelectByFile(name);
-  }
+    // populate UI
+    function refreshFileUI(){
+      const fl = document.getElementById('fileList');
+      fl.innerHTML = '';
+      for(const fname of Object.keys(G.files)){
+        const item = document.createElement('div');
+        item.className = 'file-item' + (fname===G.activeFile ? ' active' : '');
+        item.innerHTML = `<div style="font-weight:700">${fname}</div><div class="muted small">✎</div>`;
+        item.onclick = ()=>openFile(fname);
+        // make whole area clickable on touch
+        item.addEventListener('touchstart', ()=>openFile(fname));
+        fl.appendChild(item);
+      }
+      const tabs = document.getElementById('tabs');
+      const tabEls = tabs.querySelectorAll('.tab');
+      tabEls.forEach(t => t.classList.remove('active'));
+      const myTab = Array.from(tabEls).find(x => x.dataset.fid === G.activeFile);
+      if(myTab) myTab.classList.add('active');
+    }
 
-  function updateLanguageSelectByFile(name){
-    const ext = name.split('.').pop();
-    const sel = document.getElementById('languageSelect');
-    if(ext==='py') sel.value='python';
-    else if(ext==='js') sel.value='javascript';
-    else if(ext==='c') sel.value='c';
-    else if(ext==='cpp') sel.value='cpp';
-    else if(ext==='html') sel.value='html';
-  }
+    function openFile(name){
+      if(!G.files[name]) return;
+      G.activeFile = name;
+      if(G.editor) G.editor.setValue(G.files[name]);
+      refreshFileUI();
+      updateLanguageSelectByFile(name);
+    }
 
-  document.getElementById('newFile').addEventListener('click', () => {
-    let base = 'untitled'; let i=1; while(G.files[`${base}${i}.js`]) i++;
-    const fname = `${base}${i}.js`; G.files[fname] = "// novo arquivo\n"; G.activeFile = fname; refreshFileUI(); updateTabsAdd(fname); openFile(fname);
-  });
-  function updateTabsAdd(fname){
-    const tabs = document.getElementById('tabs');
-    if(Array.from(tabs.querySelectorAll('.tab')).some(t=>t.dataset.fid===fname)) return;
-    const div = document.createElement('div'); div.className='tab'; div.dataset.fid=fname; div.innerText=fname; div.onclick = ()=>openFile(fname);
-    tabs.insertBefore(div, tabs.children[3] || tabs.lastChild);
-  }
+    function updateTabsAdd(fname){
+      const tabs = document.getElementById('tabs');
+      if(Array.from(tabs.querySelectorAll('.tab')).some(t=>t.dataset.fid===fname)) return;
+      const div = document.createElement('div'); div.className='tab'; div.dataset.fid=fname; div.innerText=fname;
+      div.onclick = ()=>openFile(fname); div.addEventListener('touchstart', ()=>openFile(fname));
+      tabs.insertBefore(div, tabs.children[3] || tabs.lastChild);
+    }
 
-  document.getElementById('shareBtn').addEventListener('click', () => {
-    const blob = new Blob([ JSON.stringify(G.files,null,2) ], {type:'application/json'});
-    const url = URL.createObjectURL(blob); const a = document.createElement('a'); a.href=url; a.download='gustocode-project.json'; a.click(); URL.revokeObjectURL(url);
-    logTerminal('Projeto exportado (JSON).');
-  });
-
-  require.config({ paths: { 'vs': 'https://cdn.jsdelivr.net/npm/monaco-editor@0.39.0/min/vs' }});
-  require(['vs/editor/editor.main'], function() {
-    G.monaco = monaco;
-    G.editor = monaco.editor.create(document.getElementById('editor'), {
-      value: G.files[G.activeFile], language: 'python', theme: 'vs-dark',
-      automaticLayout: true, minimap: { enabled: false }, fontSize:13, wordWrap:"on",
+    // new file
+    document.getElementById('newFile').addEventListener('click', ()=>{
+      let base='untitled', i=1; while(G.files[`${base}${i}.js`]) i++; const fname = `${base}${i}.js`;
+      G.files[fname] = "// novo arquivo\n"; G.activeFile = fname; refreshFileUI(); updateTabsAdd(fname); openFile(fname);
     });
 
-    G.editor.onDidChangeCursorPosition(e=>{ const pos=e.position; document.getElementById('cursorInfo').innerText = `Ln ${pos.lineNumber}, Col ${pos.column}`; });
-    G.editor.onDidChangeModelContent(()=> { G.files[G.activeFile] = G.editor.getValue(); });
-    G.editor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.Enter, () => runActive());
-    window.addEventListener('keydown', (ev)=>{ if((ev.ctrlKey||ev.metaKey) && ev.key.toLowerCase()==='s'){ ev.preventDefault(); downloadActive(); } });
+    // share / export
+    document.getElementById('shareBtn').addEventListener('click', ()=>{
+      const blob = new Blob([ JSON.stringify(G.files,null,2) ], {type:'application/json'});
+      const url = URL.createObjectURL(blob); const a = document.createElement('a'); a.href=url; a.download='gustocode-project.json'; a.click(); URL.revokeObjectURL(url);
+      logTerminal('Projeto exportado (JSON).');
+    });
 
-    refreshFileUI(); Object.keys(G.files).forEach(updateTabsAdd);
-  });
+    // Monaco init (via require)
+    require.config({ paths: { 'vs': 'https://cdn.jsdelivr.net/npm/monaco-editor@0.39.0/min/vs' }});
+    require(['vs/editor/editor.main'], function() {
+      G.monaco = monaco;
+      G.editor = monaco.editor.create(document.getElementById('editor'), {
+        value: G.files[G.activeFile], language: 'python', theme: 'vs-dark',
+        automaticLayout:true, minimap:{enabled:false}, fontSize:14, wordWrap:"on", tabSize:2, glyphMargin:true
+      });
 
-  document.getElementById('languageSelect').addEventListener('change', (e)=>{
-    const lang = e.target.value; let monLang = 'plaintext';
-    if(lang==='python') monLang='python'; if(lang==='javascript') monLang='javascript'; if(lang==='c' || lang==='cpp') monLang='cpp'; if(lang==='html') monLang='html';
-    if(G.monaco) monaco.editor.setModelLanguage(G.editor.getModel(), monLang);
-  });
+      G.editor.onDidChangeCursorPosition(e=>{
+        const pos = e.position; document.getElementById('cursorInfo').innerText = `Ln ${pos.lineNumber}, Col ${pos.column}`;
+      });
 
-  document.getElementById('runBtn').addEventListener('click', runActive);
-  document.getElementById('stopBtn').addEventListener('click', ()=>{ logTerminal('Execução interrompida (simulada).','err'); });
+      G.editor.onDidChangeModelContent(()=> { G.files[G.activeFile] = G.editor.getValue(); });
 
-  function insertSnippet(kind){
-    if(kind==='py'){ G.editor.setValue("# Snippet Python\nfor i in range(3):\n  print('Olá, Augusto!', i)\n"); document.getElementById('languageSelect').value='python'; monaco.editor.setModelLanguage(G.editor.getModel(),'python'); }
-    if(kind==='js'){ G.editor.setValue("// Snippet JS\nconsole.log('Olá, Augusto!');\n"); document.getElementById('languageSelect').value='javascript'; monaco.editor.setModelLanguage(G.editor.getModel(),'javascript'); }
-    if(kind==='c'){ G.editor.setValue("/* Snippet C */\n#include <stdio.h>\nint main(){ printf(\"Olá, Augusto!\\n\"); return 0; }\n"); document.getElementById('languageSelect').value='c'; monaco.editor.setModelLanguage(G.editor.getModel(),'cpp'); }
-  }
+      // shortcuts
+      G.editor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.Enter, ()=> runActive());
+      window.addEventListener('keydown', (ev)=>{ if((ev.ctrlKey||ev.metaKey) && ev.key.toLowerCase()==='s'){ ev.preventDefault(); downloadActive(); } });
 
-  function downloadActive(){
-    const code = G.editor.getValue(); const fname = G.activeFile;
-    const blob = new Blob([code], {type
+      refreshFileUI(); Object.keys(G.files).forEach(updateTabsAdd);
+    });
+
+    // select language
+    document.getElementById('languageSelect').addEventListener('change', (e)=>{
+      const lang = e.target.value; let monLang='plaintext';
+      if(lang==='python') monLang='python'; if(lang==='javascript') monLang='javascript'; if(lang==='c'||lang==='cpp') monLang='cpp'; if(lang==='html') monLang='html';
+      if(G.monaco) monaco.editor.setModelLanguage(G.editor.getModel(), monLang);
+    });
+
+    // Run / Stop
+    document.getElementById('runBtn').addEventListener('click', runActive);
+    document.getElementById('stopBtn').addEventListener('click', ()=>{ logTerminal('Execução interrompida (simulada).','err'); });
+
+    // snippets
+    window.insertSnippet = function(kind){
+      if(kind==='py'){ G.editor.setValue("# Snippet Python\nfor i in range(3):\n  print('Olá, Augusto!', i)\n"); document.getElementById('languageSelect').value='python'; monaco.editor.setModelLanguage(G.editor.getModel(),'python'); }
+      if(kind==='js'){ G.editor.setValue("// Snippet JS\nconsole.log('Olá, Augusto!');\n"); document.getElementById('languageSelect').value='javascript'; monaco.editor.setModelLanguage(G.editor.getModel(),'javascript'); }
+      if(kind==='c'){ G.editor.setValue("/* Snippet C */\n#include <stdio.h>\nint main(){ printf(\"Olá, Augusto!\\n\"); return 0; }\n"); document.getElementById('languageSelect').value='c'; monaco.editor.setModelLanguage(G.editor.getModel(),'cpp'); }
+    };
+
+    function downloadActive(){
+      const code = G.editor.getValue(); const fname = G.activeFile;
+      const blob = new Blob([code], {type:'text/plain'}); const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = fname; a.click(); URL.revokeObjectURL(a.href);
+      logTerminal(`Arquivo ${fname} exportado.`);
+    }
+
+    // Runtimes: Pyodide, QuickJS, webc86 (dynamic load)
+    async function setupPyodide(){
+      const pyStatus = document.getElementById('pyStatus');
+      try {
+        await loadScript('https://cdn.jsdelivr.net/pyodide/v0.29.0/full/pyodide.js');
+        const py = await loadPyodide({ indexURL: 'https://cdn.jsdelivr.net/pyodide/v0.29.0/full/' });
+        G.pyodide = py; G.runtimesReady.py = true; pyStatus.innerText = 'pronto ✅'; document.getElementById('statusEngine').innerText = 'Pyodide ok'; logTerminal('Pyodide carregado ✅');
+      } catch(err){ pyStatus.innerText='falha'; logTerminal('Pyodide falhou: ' + err, 'err'); }
+    }
+
+    async function setupQuickJS(){
+      const jsStatus = document.getElementById('jsStatus');
+      try {
+        await loadScript('https://cdn.jsdelivr.net/npm/quickjs-emscripten@0.31.0/dist/index.global.js');
+        if(typeof getQuickJS === 'function'){ const QuickJS = await getQuickJS(); G.quickjs = QuickJS; G.runtimesReady.js = true; jsStatus.innerText='pronto ✅'; logTerminal('QuickJS pronto ✅'); }
+        else { jsStatus.innerText='não encontrado'; logTerminal('QuickJS não disponível', 'err'); }
+      } catch(err){ jsStatus.innerText='falha'; logTerminal('Erro QuickJS: ' + err, 'err'); }
+    }
+
+    async function setupWebC86(){
+      const cStatus = document.getElementById('cStatus');
+      try {
+        const url = 'https://pixeltris.github.io/webc86/webc86.js';
+        await loadScript(url, 8000).catch(()=>{ throw new Error('webc86 não disponível no CDN'); });
+        if(window.webc86){ G.webc86 = window.webc86; G.runtimesReady.c = true; cStatus.innerText='pronto (webc86) ✅'; logTerminal('webc86 pronto.'); } 
+        else { cStatus.innerText='indisponível'; logTerminal('webc86 objeto não encontrado', 'err'); }
+      } catch(err){ cStatus.innerText='não disponível'; logTerminal('C/C++ emulador indisponível: ' + err, 'err'); }
+    }
+
+    function loadScript(src, timeout=20000){
+      return new Promise((resolve,reject)=>{
+        const s = document.createElement('script'); s.src=src; s.async=true; s.crossOrigin="anonymous";
+        let done=false;
+        s.onload = ()=>{ if(done) return; done=true; resolve(); };
+        s.onerror = (e)=>{ if(done) return; done=true; reject(new Error('Erro ao carregar ' + src)); };
+        document.head.appendChild(s);
+        if(timeout>0) setTimeout(()=>{ if(done) return; done=true; reject(new Error('Timeout ao carregar ' + src)); }, timeout);
+      });
+    }
+
+    (async function initRuntimes(){ setupPyodide(); setupQuickJS(); setupWebC86();
+      const interval = setInterval(()=>{ if(Object.values(G.runtimesReady).every(x=>x===true)){ clearInterval(interval); logTerminal('Runtimes carregados (quando disponíveis). ✅'); document.getElementById('statusEngine').innerText = 'pronto'; } }, 700);
+    })();
+
+    // EXECUÇÃO
+    async function runActive(){
+      const code = G.editor.getValue(); const langSel = document.getElementById('languageSelect').value;
+      logTerminal(`Executando ${G.activeFile} (${langSel}) ...`);
+      if(langSel === 'python'){
+        if(!G.runtimesReady.py){ logTerminal('Pyodide ainda não pronto', 'err'); return; }
+        try {
+          const out = await G.pyodide.runPythonAsync(`
+import sys, traceback, io
+_buf = io.StringIO()
+_old = sys.stdout
+sys.stdout = _buf
+try:
+${indentForPy(code,2)}
+except Exception:
+  traceback.print_exc()
+sys.stdout = _old
+_buf.getvalue()
+`);
+          logTerminal(out || '(sem saída)');
+        } catch(err){ logTerminal('Erro Python: ' + err, 'err'); }
+      } else if(langSel === 'javascript'){
+        if(G.runtimesReady.js && G.quickjs){
+          try {
+            const q = G.quickjs.newContext();
+            const result = q.evalCode(code);
+            if(result.error){ logTerminal('Erro JS: ' + G.quickjs.dump(result.error), 'err'); result.error.dispose(); }
+            else { const value = G.quickjs.dump(result.value); logTerminal(String(value)); result.value.dispose(); }
+            q.dispose();
+          } catch(err){ logTerminal('QuickJS exec erro: ' + err, 'err'); }
+        } else {
+          try { const output = runInIframe(code); logTerminal(output); } catch(err){ logTerminal('Erro JS fallback: ' + err, 'err'); }
+        }
+      } else if(langSel === 'c' || langSel === 'cpp'){
+        if(G.runtimesReady.c && G.webc86){
+          try { const result = await window.webc86.runC(code); logTerminal(result.stdout || result || '(sem saída)'); } catch(err){ logTerminal('Erro C: ' + err, 'err'); }
+        } else { logTerminal('Compilador C/C++ não disponível. Hospede webc86 ou compile WASM com Emscripten.', 'err'); }
+      } else if(langSel === 'html'){
+        const preview = window.open('', '_blank'); preview.document.write(code); preview.document.close(); logTerminal('Preview HTML aberto em nova aba.');
+      } else { logTerminal('Linguagem não suportada: ' + langSel, 'err'); }
+    }
+
+    function indentForPy(s,n){ const pad=' '.repeat(n*2); return s.split('\n').map(l=>pad + l).join('\n'); }
+    function runInIframe(code){ const iframe = document.createElement('iframe'); iframe.style.display='none'; document.body.appendChild(iframe); const win = iframe.contentWindow; try{ const result = win.eval(code); document.body.removeChild(iframe); return result === undefined ? '(sem retorno)' : String(result); } catch(err){ document.body.removeChild(iframe); throw err; } }
+
+    // bootstrap open
+    setTimeout(()=>{ refreshFileUI(); openFile(G.activeFile); logTerminal('GustoCode iniciado. Use Ctrl+Enter para executar. ✨'); }, 600);
+
+    // expose some debug
+    window._GustoDebug = { G, logTerminal };
+
+  }); // end DOMContentLoaded
+  </script>
+
+  <!-- ASSISTENTE (module) - load only when user clicks "Pedir sugestão" -->
+  <script type="module">
+    // O módulo do assistente só é carregado quando o usuário pedir — evita downloads gigantes
+    // implementamos carregamento sob demanda para não travar o carregamento inicial do site
+    const askBtn = document.getElementById('askAssistantBtn');
+    const assistOutput = document.getElementById('assistantOutput');
+    const insertBtn = document.getElementById('insertSuggestionBtn');
+    const copyBtn = document.getElementById('copySuggestionBtn');
+    const modelSelect = document.getElementById('assistantModelSelect');
+
+    let assistantLoaded = false;
+    let codeAssistant = null;
+    let currentModelId = null;
+
+    askBtn.addEventListener('click', async () => {
+      const promptText = document.getElementById('assistantPrompt').value.trim();
+      if(!promptText){ assistOutput.textContent = 'Escreva o pedido no campo acima.'; return; }
+      let modelId = modelSelect.value;
+      if(modelId === 'local'){ modelId = prompt('Cole modelId/HF path ou URL do modelo:'); if(!modelId) return; }
+
+      if(!assistantLoaded || currentModelId !== modelId){
+        assistOutput.textContent = 'Carregando biblioteca do assistente (pode demorar)...';
+        try {
+          // import dinamicamente a lib leve (@xenova/transformers) na versão que suporta browser
+          const mod = await import('https://cdn.jsdelivr.net/npm/@xenova/transformers@2.4.0/dist/transformers.min.js');
+          const { pipeline, env } = mod;
+          // opcional: alterar env.localModelPath para '/models/' se hospedar modelos no repo
+          // env.localModelPath = '/models/';
+          const device = ('gpu' in navigator) ? 'webgpu' : 'wasm';
+          assistOutput.textContent = `Carregando modelo ${modelId} (device=${device}) — pode demorar...`;
+          codeAssistant = await pipeline('text-generation', modelId, { device: device, max_new_tokens: 256, temperature: 0.2 });
+          assistantLoaded = true; currentModelId = modelId;
+          assistOutput.textContent = `Assistente carregado (modelo: ${modelId}). Gerando...`;
+        } catch(err){
+          assistOutput.textContent = 'Falha ao carregar assistente: ' + String(err);
+          console.error(err);
+          return;
+        }
+      } else {
+        assistOutput.textContent = 'Gerando sugestão...';
+      }
+
+      try {
+        // pega contexto do editor (linhas ao redor do cursor)
+        const editor = window.G && window.G.editor;
+        let editorCtx = '';
+        if(editor){ const model = editor.getModel(); const pos = editor.getPosition(); const start = Math.max(1, pos.lineNumber - 30); const end = Math.min(model.getLineCount(), pos.lineNumber + 20); let lines=[]; for(let i=start;i<=end;i++) lines.push(model.getLineContent(i)); editorCtx = lines.join('\n'); }
+        const fullPrompt = `# Contexto:\n${editorCtx}\n\n# Pedido:\n${promptText}\n\n# Resposta (apenas código):\n`;
+        const out = await codeAssistant(fullPrompt, { max_new_tokens: 256, temperature: 0.2 });
+        const txt = Array.isArray(out) ? (out[0]?.generated_text || out[0]?.text || JSON.stringify(out[0])) : (out.generated_text || out.text || JSON.stringify(out));
+        assistOutput.textContent = txt;
+      } catch(err){
+        assistOutput.textContent = 'Erro na geração: ' + String(err);
+        console.error(err);
+      }
+    });
+
+    insertBtn.addEventListener('click', ()=>{
+      const suggestion = document.getElementById('assistantOutput').textContent;
+      if(!suggestion) return;
+      const editor = window.G && window.G.editor;
+      if(!editor) return alert('Editor não inicializado ainda.');
+      const pos = editor.getPosition();
+      const id = { lineNumber: pos.lineNumber + 1, column: 1 };
+      editor.executeEdits('assistant-insert', [{ range: new monaco.Range(id.lineNumber, id.column, id.lineNumber, id.column), text: suggestion + '\n', forceMoveMarkers: true }]);
+      logTerminal('Sugestão inserida no editor.');
+    });
+
+    copyBtn.addEventListener('click', async ()=>{
+      const text = document.getElementById('assistantOutput').textContent;
+      if(!text) return;
+      await navigator.clipboard.writeText(text);
+      logTerminal('Sugestão copiada para a área de transferência.');
+    });
+
+  </script>
+
+  <!-- FIM -->
+</body>
+  </html>
